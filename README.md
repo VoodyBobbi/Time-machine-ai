@@ -28,7 +28,7 @@ pip install -r requirements.txt
 
 ## Настройка
 
-Заполните `.env` по образцу `.env.example`.
+Создайте и заполните `.env` по образцу `.env.example`.
 
 Обязательные переменные:
 
