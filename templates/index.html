@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Машина времени</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero panel">
+        <div class="hero-copy">
+          <h1>МАШИНА ВРЕМЕНИ</h1>
+          <p class="hero-text">
+            Введите год, выберите характер изображения и получите одно большое
+            фотореалистичное изображение с описанием обстоятельств.
+          </p>
+        </div>
+
+        <div class="hero-machine" aria-hidden="true">
+          <svg viewBox="0 0 620 320" class="machine-svg" role="presentation">
+            <defs>
+              <linearGradient id="ringGlow" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#fff4c5"></stop>
+                <stop offset="50%" stop-color="#ff8b4e"></stop>
+                <stop offset="100%" stop-color="#287a78"></stop>
+              </linearGradient>
+              <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#d6d1ca"></stop>
+                <stop offset="100%" stop-color="#695f58"></stop>
+              </linearGradient>
+              <linearGradient id="core" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#fff8da"></stop>
+                <stop offset="100%" stop-color="#ffb15a"></stop>
+              </linearGradient>
+            </defs>
+
+            <ellipse cx="310" cy="270" rx="170" ry="28" fill="rgba(42,27,13,0.14)"></ellipse>
+            <g transform="translate(120 28)">
+              <ellipse cx="190" cy="120" rx="142" ry="112" fill="none" stroke="url(#ringGlow)" stroke-width="18"></ellipse>
+              <ellipse cx="190" cy="120" rx="118" ry="92" fill="none" stroke="rgba(255,255,255,0.42)" stroke-width="4"></ellipse>
+              <ellipse cx="190" cy="120" rx="72" ry="72" fill="url(#core)" opacity="0.96"></ellipse>
+              <ellipse cx="190" cy="120" rx="40" ry="40" fill="rgba(255,255,255,0.75)"></ellipse>
+
+              <g fill="url(#steel)">
+                <rect x="50" y="108" width="64" height="24" rx="12"></rect>
+                <rect x="266" y="108" width="64" height="24" rx="12"></rect>
+                <rect x="176" y="10" width="28" height="58" rx="14"></rect>
+                <rect x="176" y="172" width="28" height="58" rx="14"></rect>
+              </g>
+
+              <g stroke="url(#steel)" stroke-width="10" fill="none" stroke-linecap="round">
+                <path d="M78 120 C32 120, 24 166, 16 198"></path>
+                <path d="M302 120 C348 120, 356 166, 364 198"></path>
+                <path d="M190 42 C190 12, 228 0, 254 -8"></path>
+                <path d="M190 198 C190 232, 154 250, 132 258"></path>
+              </g>
+
+              <g fill="url(#steel)">
+                <rect x="138" y="226" width="22" height="58" rx="11"></rect>
+                <rect x="220" y="226" width="22" height="58" rx="11"></rect>
+                <rect x="126" y="274" width="48" height="12" rx="6"></rect>
+                <rect x="208" y="274" width="48" height="12" rx="6"></rect>
+              </g>
+
+              <g fill="#c84f24">
+                <circle cx="108" cy="120" r="8"></circle>
+                <circle cx="272" cy="120" r="8"></circle>
+                <circle cx="190" cy="46" r="8"></circle>
+                <circle cx="190" cy="194" r="8"></circle>
+              </g>
+            </g>
+          </svg>
+        </div>
+      </header>
+
+      <section class="panel control-panel">
+        <form id="generation-form" class="control-form">
+          <div class="field style-field">
+            <span class="field-label">Стиль изображения</span>
+            <input id="style-input" name="style" type="hidden" value="{{ default_style }}">
+            <div class="style-grid" id="style-grid">
+              {% for style in styles %}
+              <button
+                type="button"
+                class="style-card {% if style.key == default_style %}is-active{% endif %}"
+                data-style-key="{{ style.key }}"
+                aria-pressed="{% if style.key == default_style %}true{% else %}false{% endif %}"
+              >
+                <span class="style-card-title">{{ style.label }}</span>
+                <span class="style-card-text">{{ style.description }}</span>
+              </button>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="control-bottom">
+            <label class="field year-field">
+              <span class="field-label">Год</span>
+              <input
+                id="year-input"
+                name="year"
+                type="text"
+                inputmode="text"
+                placeholder="-44, 476, 1812, 2035"
+                required
+              >
+            </label>
+
+            <div class="control-actions">
+              <button id="submit-button" class="button button-primary" type="submit">
+                Сгенерировать
+              </button>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel panel-status">
+        <div class="status-head">
+          <div>
+            <p class="section-label">Прогресс</p>
+            <h2 id="status-title">Ожидание запроса</h2>
+          </div>
+          <span id="status-badge" class="status-badge">Готов к работе</span>
+        </div>
+
+        <div class="progress-wrap" aria-live="polite">
+          <div class="progress-bar">
+            <div id="progress-fill" class="progress-fill"></div>
+          </div>
+          <div class="progress-meta">
+            <span id="progress-value">0%</span>
+            <span id="progress-message">Введите год и запустите генерацию.</span>
+          </div>
+        </div>
+
+        <div id="error-box" class="message-box message-box-error is-hidden"></div>
+        <div id="success-box" class="message-box message-box-success is-hidden"></div>
+      </section>
+
+      <section class="panel result-panel">
+        <div class="result-heading">
+          <div>
+            <p class="section-label">Результат</p>
+            <h2 id="result-year">Одна итоговая картинка</h2>
+          </div>
+          <p id="result-style" class="result-style"></p>
+        </div>
+
+        <div id="result-empty" class="result-empty">
+          После генерации здесь появится одна большая картинка и описание обстоятельств.
+        </div>
+
+        <article id="result-card" class="result-card is-hidden">
+          <div class="result-image-wrap">
+            <img id="result-image" alt="Сгенерированное изображение">
+          </div>
+          <div class="result-copy">
+            <p class="result-copy-label">Описание обстоятельств</p>
+            <p id="result-description" class="result-description"></p>
+          </div>
+        </article>
+      </section>
+    </div>
+
+    <script>
+      window.APP_CONFIG = {
+        defaultStyle: "{{ default_style }}"
+      };
+    </script>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+  </body>
+</html>
