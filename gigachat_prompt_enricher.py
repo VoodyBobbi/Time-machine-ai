@@ -62,15 +62,25 @@ IMAGE_ENHANCER_SYSTEM_PROMPT = """
 - Укажи композицию, ракурс, масштаб, свет, реальные материалы, фактуры, атмосферу, глубину кадра и характер оптики камеры.
 - Подчёркивай красоту кадра через красивый естественный или кинематографичный свет, богатую, но правдоподобную цветопередачу и впечатляющую детализацию.
 - Люди, техника, архитектура, оружие, одежда, механизмы и среда должны выглядеть материально и исторически правдоподобно.
-- Избегай рисованности, иллюстративности, мультяшности, плакатности, fantasy art и CGI-look.
+- Добавляй реальные несовершенства среды: лёгкий износ, пыль, влажность, микрофактуру материалов, следы эксплуатации, естественную неоднородность поверхностей, правдоподобные погодные эффекты.
+- Если в кадре есть люди, они должны выглядеть как настоящие живые люди, а не как стилизованные фигурки: realistic faces, skin texture, natural posture, candid body language.
+- Используй лексику photographic realism, editorial photography, documentary realism, high-end real camera capture.
+- Для футуристических сцен допустимы стерильная эстетика, гладкие блестящие металлические поверхности, неоновые шлейфы, чистая архитектура будущего, стекло, хром, холодный свет и визуальная эффектность, если это соответствует году и сцене.
+- Но даже при футуристической стерильности изображение должно читаться как настоящее фото: realistic reflections, real optical bloom, believable exposure, subtle lens artifacts, camera-captured atmosphere, not a render.
+- Избегай рисованности, иллюстративности, мультяшности, плакатности, matte painting, fantasy art, concept art и CGI-look.
 - Если сцена про будущее, она должна выглядеть как убедимая реальная фотография из будущего мира, а не как концепт-арт.
+- Если сцена относится к эпохе до изобретения фотографии, всё равно подавай её как максимально реалистичную живую реконструкцию, снятую как настоящее фото высокого класса.
 """.strip()
 
 IMAGE_STYLE_BOOST = (
-    "photorealistic real-world scene, ultra realistic photography, breathtaking but believable beauty, "
-    "exquisite natural and cinematic light, authentic textures, physically plausible materials, "
-    "premium full-frame camera look, rich but realistic colors, sharp micro-details, elegant composition, "
-    "single coherent scene, no collage, no illustration, no painting, no cartoon, no fantasy art, no CGI render look"
+    "photorealistic real-world scene, ultra realistic photography, atmospheric editorial photo, "
+    "breathtaking but believable beauty, exquisite natural and cinematic light, authentic textures, "
+    "physically plausible materials, premium full-frame camera look, subtle lens compression, "
+    "rich but realistic colors, extremely sharp micro-details, realistic skin texture, realistic wear and tear, "
+    "natural imperfections, grounded environmental detail, elegant composition, single coherent scene, "
+    "sleek futuristic surfaces, polished metal, neon light trails and clean architecture are allowed when justified, "
+    "but the frame must still read as real photography, "
+    "not concept art, not matte painting, not illustration, not painting, not cartoon, not fantasy art, not CGI render look"
 )
 
 

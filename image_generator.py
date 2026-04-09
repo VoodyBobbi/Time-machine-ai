@@ -40,7 +40,8 @@ STYLE_PRESETS: dict[str, StylePreset] = {
         description="Реальный репортажный кадр с атмосферой подлинного события.",
         prompt_suffix=(
             "documentary photography, authentic reportage, truthful atmosphere, real-world environment, "
-            "natural motion, high realism, grounded physical detail"
+            "natural motion, grounded physical detail, candid realism, editorial photojournalism, "
+            "lived-in detail, believable imperfections"
         ),
     ),
     "cinematic_photo": StylePreset(
@@ -49,7 +50,8 @@ STYLE_PRESETS: dict[str, StylePreset] = {
         description="Красивое фотореалистичное изображение с сильным светом и глубиной.",
         prompt_suffix=(
             "cinematic photography, visually stunning but realistic, elegant composition, dramatic natural light, "
-            "large-scale photographic scene, premium film still realism"
+            "large-scale photographic scene, premium film still realism, realistic atmosphere, "
+            "high-end full-frame camera capture, glossy but plausible futuristic materials, real optical bloom"
         ),
     ),
     "engineering_shot": StylePreset(
@@ -58,7 +60,8 @@ STYLE_PRESETS: dict[str, StylePreset] = {
         description="Максимум конструктивной правдоподобности, механики и материалов.",
         prompt_suffix=(
             "engineering photography, mechanically plausible design, realistic metal and glass, "
-            "precise construction detail, industrial realism, credible technical surfaces"
+            "precise construction detail, industrial realism, credible technical surfaces, micro-texture detail, "
+            "real manufacturing marks, non-sterile surfaces"
         ),
     ),
     "night_realism": StylePreset(
@@ -67,7 +70,8 @@ STYLE_PRESETS: dict[str, StylePreset] = {
         description="Глубокая ночная съёмка с настоящим светом, бликами и отражениями.",
         prompt_suffix=(
             "night photography, realistic reflections, wet surfaces, atmospheric darkness, believable neon and tungsten light, "
-            "true photographic contrast, beautiful nocturnal realism"
+            "true photographic contrast, beautiful nocturnal realism, cinematic haze, realistic moisture in the air, "
+            "neon light trails captured by a real camera"
         ),
     ),
     "industry_architecture": StylePreset(
@@ -76,12 +80,20 @@ STYLE_PRESETS: dict[str, StylePreset] = {
         description="Индустриальные объекты, масштабные конструкции, городская среда и архитектура.",
         prompt_suffix=(
             "industrial and architectural photography, large structures, built environment realism, "
-            "credible urban and industrial design, construction detail, majestic but realistic scale"
+            "credible urban and industrial design, construction detail, majestic but realistic scale, "
+            "weathered surfaces, true architectural materials, not utopian concept art"
         ),
     ),
 }
 
 DEFAULT_STYLE_KEY = "cinematic_photo"
+REALISM_LOCK = (
+    "Realism lock: actual photograph, ultra photorealistic, fine-grained material detail, "
+    "real skin pores when faces are visible, natural asymmetry, physically plausible geometry, "
+    "subtle weathering or pristine engineered finish where appropriate, realistic scale relationships, "
+    "true atmospheric perspective, realistic reflections, believable exposure, subtle lens artifacts, "
+    "not glossy CGI, not concept art, not synthetic illustration."
+)
 
 
 @dataclass(frozen=True)
@@ -203,8 +215,10 @@ def build_styled_image_prompt(image_prompt: str, style_key: str) -> tuple[str, S
     styled_prompt = (
         f"{image_prompt}\n\n"
         f"Style direction: {style_preset.prompt_suffix}, breathtaking but believable beauty, "
-        "gorgeous realistic light, exquisite micro-details, rich but natural colors, beautiful composition, "
-        "full-frame real photography, premium lens rendering, no illustration."
+        "gorgeous realistic light, exquisite micro-details, dense environmental detail, rich but natural colors, "
+        "beautiful composition, full-frame real photography, premium lens rendering, realistic lens behavior, "
+        "subtle atmospheric depth, natural imperfections, tactile material realism, not stylized, no illustration.\n\n"
+        f"{REALISM_LOCK}"
     )
     return styled_prompt, style_preset
 
