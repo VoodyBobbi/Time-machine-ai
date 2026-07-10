@@ -1,0 +1,166 @@
+TECHNICAL_DOCUMENTATION.md
+
+## 1. Общая информация
+
+- **Название проекта**: Time-machine-ai (Машина времени на Flask)
+- **Назначение**: Локальный веб-сервис, который по введённому году (или текстовому промпту) генерирует фотореалистичное изображение с помощью GigaChat (контекст + описание) и OpenAI (DALL·E-подобная модель).
+- **Область применения**: Демонстрация/развлечение, генерация исторических/футуристических визуализаций.
+- **Стек технологий**: Python 3, Flask, GigaChat SDK, OpenAI SDK, HTML/CSS/JS (frontend).
+- **Краткое описание**: Одностраничное Flask-приложение с backend-воркерами в потоках, прогресс-баром и историей генераций.
+
+**Project Overview**  
+**Цель**: Создать простой локальный "машину времени" — ввести год → получить описание эпохи + стилизованное фотореалистичное изображение.  
+**Пользователь**: Разработчик / энтузиаст (локальный запуск).  
+**Ключевая ценность**: Быстрая визуализация исторического/футуристического контекста через комбинацию LLM (GigaChat) и image generation (OpenAI).
+
+## 2. Структура проекта
+.
+├── app.py                          # Основное Flask-приложение
+├── image_generator.py              # Основная логика генерации (CLI + core)
+├── gigachat_prompt_enricher.py     # Взаимодействие с GigaChat (3 промпта)
+├── requirements.txt
+├── .env.example                    # (название с пробелом/опечаткой)
+├── .gitignore
+├── templates/
+│   └── index.html                  # Основная страница
+├── static/                         # CSS, JS
+└── generated_images/               # Создаётся автоматически
+text## 3. Архитектура
+
+Простое монолитное Flask-приложение.
+
+- **Точки входа**:
+  - `app.py` — веб-сервер (порт 5000).
+  - `image_generator.py` — CLI и core-функции.
+
+**Поток данных** (для года):
+1. Пользователь → `/api/jobs` (POST).
+2. Создаётся job в памяти (`_jobs` dict + lock).
+3. Thread запускает `generate_year_image()`.
+4. → `enrich_year_prompt()` (GigaChat) → `describe_scene_in_russian()` → `enhance_prompt_for_image()`.
+5. → OpenAI Images API → сохранение PNG.
+6. Polling `/api/jobs/<id>` + отображение результата.
+
+**ASCII-схема**:
+Browser → Flask (app.py) → Thread → generate_year_image()
+├── GigaChat (3 вызова)
+└── OpenAI Images → generated_images/
+text## 4. Компоненты
+
+- **app.py**: Веб-интерфейс, управление job'ами (in-memory), прогресс, статические файлы.
+- **image_generator.py**: Подготовка промптов, стили (STYLE_PRESETS), вызов OpenAI, сохранение изображений.
+- **gigachat_prompt_enricher.py**: Системные промпты и обёртки для GigaChat (аналитика года, описание для пользователя, image prompt).
+
+**Входы/выходы** — см. README и код.
+
+## 5. Бизнес-логика
+
+- Принимает год (целое число, ≠0) или текст.
+- Для года: обогащает контекстом через GigaChat.
+- Генерирует отдельное русское описание + image prompt.
+- Применяет один из 5 предустановленных стилей + жёсткий REALISM_LOCK.
+- Хранит историю последних генераций на клиенте (frontend).
+
+## 6. API
+
+**Внутреннее REST API (Flask)**:
+
+- `GET /` — главная страница.
+- `POST /api/jobs` — создать задачу ({year, style}).
+- `GET /api/jobs/<job_id>` — статус job'а (progress, description_ru, image_url).
+- `GET /generated/<filename>` — отдача изображения.
+
+Ошибки: 400 (невалидный год/стиль), 404 (job не найден).
+
+## 7. Хранилища данных
+
+- **In-memory**: dict `_jobs` (с lock) — только во время работы сервера.
+- **Файловая система**: `generated_images/` (PNG-файлы).
+- Нет БД, очередей, persistent storage.
+
+## 8. Интеграции
+
+- **GigaChat** (Sber): Обогащение контекста, описание, prompt engineering.
+- **OpenAI**: Генерация изображений (`gpt-image-1` или аналог).
+
+## 9. AI-компоненты
+
+- **GigaChat**:
+  - 3 специализированных системных промпта (YEAR_ANALYST, TEXT_DESCRIPTION, IMAGE_ENHANCER).
+  - Температуры: 0.75 / 0.6 / 0.85.
+- **OpenAI Images**: Генерация по финальному styled prompt + REALISM_LOCK.
+
+**Prompt Engineering Guide** (ключевые):
+- **YEAR_ANALYST_SYSTEM_PROMPT**: Широкий исторический/прогнозный контекст (5-7 предложений).
+- **IMAGE_ENHANCER_SYSTEM_PROMPT**: Преобразование в визуальный English prompt (coherent real photograph).
+
+Ограничения: Зависит от качества ответов LLM; для будущего — вероятностный характер.
+
+## 10. Конфигурация
+
+- `.env` (на основе `.env.example`):
+  - `OPENAI_KEY`
+  - `GIGACHAT_CREDENTIALS`
+  - `GIGACHAT_SCOPE`, `GIGACHAT_MODEL`, `GIGACHAT_BASE_URL` (опционально).
+
+Загружается через `python-dotenv`.
+
+## 11. Развертывание
+
+- Локально: `python -m venv venv; pip install -r requirements.txt; python app.py`.
+- Нет Docker, CI/CD, Kubernetes.
+
+## 12. Эксплуатация
+
+- Логи: стандартный вывод Flask + print в worker'ах.
+- Мониторинг/Health checks: отсутствуют.
+- Backup: только ручное копирование `generated_images/`.
+
+## 13. Безопасность
+
+- Ключи в `.env` (не коммитить).
+- Локальный запуск (`127.0.0.1`).
+- Нет аутентификации, rate limiting, валидации на уровне production.
+- Персональные данные: не обрабатываются.
+
+## 14. Зависимости
+
+```txt
+Flask>=3.0.0
+openai>=1.0.0
+python-dotenv>=1.0.0
+gigachat
+15. Ограничения
+
+In-memory job storage (теряется при рестарте).
+Нет очистки старых изображений.
+Потоковая модель (threading) — не масштабируема.
+Зависимость от внешних API (ключи, квоты, доступность).
+
+16. Выявленные проблемы
+
+Название файла .env. examle (с пробелом и опечаткой).
+In-memory состояние (не persistent).
+Debug-режим по умолчанию в app.run().
+Нет тестов, обработки ошибок API-квот.
+CLI и web используют общую логику, но CLI не полностью актуализирован.
+
+17. Рекомендации
+
+Переименовать .env.example.
+Добавить persistent storage (SQLite/Redis) для job'ов и истории.
+Добавить rate limiting и базовую защиту.
+Вынести промпты в отдельные файлы / конфиг.
+Добавить unit-тесты для парсинга и промпт-цепочек.
+
+Success Metrics (технические):
+
+Время генерации: < 30-60 сек.
+Стабильность: успешное завершение job'а.
+Качество: coherent real photo по стилю.
+
+Risks & Limitations:
+
+Зависимость от двух проприетарных API.
+Отсутствие тестов и production-ready развертывания.
+Качество генераций сильно зависит от LLM-промптов и моделей на момент вызова.
